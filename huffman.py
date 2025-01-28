@@ -1,4 +1,3 @@
-# huffman.py
 from minheap import MinHeap, MinHeapNode
 
 class HuffmanTree:
@@ -52,3 +51,20 @@ class HuffmanTree:
 
     def get_codes(self):
         return self.codes
+    
+    def decode(self, encoded_text):
+        decoded_text = ""
+        current_node = self.root
+
+        for bit in encoded_text:
+            if bit == "0":
+                current_node = current_node.left
+            else:
+                current_node = current_node.right
+                
+            # If a leaf node is reached, append the character and reset to root
+            if current_node.left is None and current_node.right is None:
+                decoded_text += current_node.data
+                current_node = self.root  # Reset to root for the next character
+
+        return decoded_text
