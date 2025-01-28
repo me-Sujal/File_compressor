@@ -62,9 +62,8 @@ class HuffmanTree:
             else:
                 current_node = current_node.right
                 
-            # If a leaf node is reached, append the character and reset to root
             if current_node.left is None and current_node.right is None:
                 decoded_text += current_node.data
-                current_node = self.root  # Reset to root for the next character
+                current_node = self.root  
 
         return decoded_text
