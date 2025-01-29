@@ -10,7 +10,20 @@ def get_image(filename="cat.bmp"):
     return img
 
 def create_frequency_dict(data):
-    return dict(Counter(data.flatten()))
+    freq = dict(Counter(data.flatten()))
+    converted_freq = {int(key) : value for key, value in freq.items()} 
+    return converted_freq
+
+def write_file(filename, content):
+    with open(filename, 'w') as file:
+        file.write(content)
+
+def write_huff_code(data):
+    filename = "huffman_code.txt"
+    with open(filename, 'w') as file:
+        for key, value in data.items():
+            file.write(f"{key}:{value}\n")
+
 
 def main():
     # Load and convert image to grayscale
@@ -27,11 +40,14 @@ def main():
     # Create Huffman coding tree
     huffman = Huffman()
     huffman.build_huffman_tree(pq)
-    huffman.generate_codes()
+    codes = huffman.generate_codes()
+    # print(codes)
+    write_huff_code(codes)
     
     # Encode image data
     flat_data = image_arr.flatten()
     encoded_data = huffman.encode(flat_data)
+    write_file("encoded.txt", encoded_data)
 
     # Write the encoded data
     encoded_file = "encoded.txt"
@@ -40,7 +56,7 @@ def main():
 
     # Decode the encoded data
     decoded_data = huffman.decode(encoded_data)
-    decoded_array = np.array(decoded_data).reshape(image_arr.shape)
+    decoded_array = np.array(decoded_data, dtype=np.uint8).reshape(image_arr.shape)
 
     # Save the decoded_image 
     decoded_image = Image.fromarray(decoded_array)

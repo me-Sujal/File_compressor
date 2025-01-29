@@ -48,6 +48,8 @@ class Huffman:
         if node.right:
             self.generate_codes(node.right, code + "1", codes)
 
+        return codes
+
     def encode(self, data):
         encoded = ""
         for value in data:
