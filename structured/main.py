@@ -1,15 +1,15 @@
 # main.py
 from core.huffman_codec import HuffmanCodec
 from utils.file_handler import FileHandler
-from utils.image_handler import ImageHandler
 from compression import Compressor
 import os
-import sys
 
 def write_huffman_codes(codes, filename="huffman_codes.txt"):
     with open(filename, 'w') as f:
         for char, code in sorted(codes.items()):
-            if isinstance(char, str) and (char.isspace() or len(char) == 1):
+            if isinstance(char, int):
+                f.write(f"Value {char} -> {code}\n")
+            elif isinstance(char, str) and (char.isspace() or len(char) == 1):
                 f.write(f"ASCII {ord(char)}: {char!r} -> {code}\n")
             else:
                 f.write(f"Value {char} -> {code}\n")
@@ -20,7 +20,6 @@ def process_file(input_path):
         return
 
     # Determine if input is image
-    is_image = input_path.lower().endswith(('.bmp', '.jpg', '.png', '.jpeg'))
     base_filename = os.path.splitext(input_path)[0]
 
     try:
@@ -29,33 +28,23 @@ def process_file(input_path):
         compressor = Compressor(base_filename + "_compressed.bin")
 
         # Read input
-        print(f"\nReading input file: {input_path}")
-        if is_image:
-            data = ImageHandler.read_image(input_path)
-            original_shape = data.shape
-        else:
-            data = FileHandler.read_text(input_path)
-            original_shape = None
-
+        data = FileHandler.read_text(input_path)
+       
         # Encode data
+
         print("Encoding data...")
-        encoded_data = codec.encode(data, is_image=is_image)
+        encoded_data = codec.encode(data)
 
-        # Save Huffman codes
-        codes_file = base_filename + "_huffman_codes.txt"
-        print(f"Saving Huffman codes to: {codes_file}")
-        write_huffman_codes(codec.codes, codes_file)
-
-        # Compress data
+        # Compress data and include Huffman codes
         print("Compressing encoded data...")
-        compressed_data = compressor.compress(encoded_data)
+        compressed_data = compressor.compress(encoded_data, codec.codes)
 
         # Save compressed data
         print(f"Saving compressed data to: {compressor.filename}")
         FileHandler.write_binary(compressor.filename, compressed_data)
 
         # Calculate compression stats
-        original_size = len(data.tobytes()) if is_image else len(data.encode('utf-8'))
+        original_size = os.path.getsize(input_path)
         compressed_size = len(compressed_data)
         compression_ratio = (1 - compressed_size / original_size) * 100
 
@@ -70,20 +59,103 @@ def process_file(input_path):
         decoded_data = codec.decode(decompressed_data, original_shape)
 
         # Save decoded data
-        if is_image:
-            output_file = base_filename + "_decoded.png"
-            print(f"Saving decoded image to: {output_file}")
-            ImageHandler.save_image(output_file, decoded_data)
-        else:
-            output_file = base_filename + "_decoded.txt"
-            print(f"Saving decoded text to: {output_file}")
-            FileHandler.write_text(output_file, decoded_data)
+        output_file = base_filename + "_decoded.txt"
+        print(f"Saving decoded text to: {output_file}")
+        FileHandler.write_text(output_file, decoded_data)
 
         print("\nProcess completed successfully!")
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+        raise e  # This will help with debugging
 
+def decompress_file(compressed_file_path):
+    if not os.path.exists(compressed_file_path):
+        print(f"Error: File '{compressed_file_path}' not found!")
+        return
+
+    try:
+        # Read the compressed binary file
+        with open(compressed_file_path, 'rb') as f:
+            compressed_data = f.read()
+
+        # Create compressor instance
+        compressor = Compressor(compressed_file_path)
+        
+        # Get the base filename without "_compressed.bin"
+        base_filename = compressed_file_path.replace("_compressed.bin", "")
+
+        # Decompress the data
+        print("\nDecompressing data...")
+        decompressed_data, recovered_codes = compressor.decompress(compressed_data)
+
+        # Create a new HuffmanCodec instance and set its codes
+        codec = HuffmanCodec()
+        codec.codes = recovered_codes
+        
+        # Rebuild the Huffman tree from the recovered codes
+        codec._build_tree({symbol: 1 for symbol in recovered_codes.keys()})
+
+        # Determine if it's an image based on original filename
+        is_image = base_filename.lower().endswith(('.bmp', '.jpg', '.png', '.jpeg'))
+
+        # Decode the data
+        print("Decoding data...")
+        if is_image:
+            # For images, we need the original shape
+            # You might need to store this in the compressed file
+            shape = None  # You'll need to modify this
+            decoded_data = codec.decode(decompressed_data, shape)
+            output_file = base_filename + "_decompressed.jpg"
+            ImageHandler.save_image(output_file, decoded_data)
+        else:
+            decoded_data = codec.decode(decompressed_data)
+            output_file = base_filename + "_decompressed.txt"
+            FileHandler.write_text(output_file, decoded_data)
+
+        print(f"\nDecompressed file saved as: {output_file}")
+
+    except Exception as e:
+        print(f"An error occurred during decompression: {str(e)}")
+        raise e
+
+# Modify your main() function to include decompression option:
+def main():
+    while True:
+        print("\nHuffman Compression Tool")
+        print("1. Compress text file")
+        print("2. Compress image file")
+        print("3. Decompress file")
+        print("4. Exit")
+        
+        choice = input("\nEnter your choice (1-4): ")
+        
+        if choice == '4':
+            break
+            
+        if choice in ['1', '2']:
+            input_path = input("Enter the input file path: ")
+            file_extension = os.path.splitext(input_path)[1].lower()
+            
+            if os.path.exists(input_path):
+                if choice == '1' and file_extension in ['.txt', '.log', '.md']:
+                    process_file(input_path)
+                elif choice == '2' and file_extension in ['.bmp', '.jpg', '.png', '.jpeg']:
+                    process_file(input_path)
+                else:
+                    print(f"Invalid file type: {file_extension}")
+            else:
+                print(f"File not found: {input_path}")
+        elif choice == '3':
+            input_path = input("Enter the compressed file path (.bin): ")
+            if os.path.exists(input_path) and input_path.endswith('.bin'):
+                decompress_file(input_path)
+            else:
+                print("Invalid file or file not found!")
+        else:
+            print("Invalid choice!")
+
+'''
 def main():
     if len(sys.argv) > 1:
         # If file provided as command line argument
@@ -104,17 +176,19 @@ def main():
                 
             if choice in ['1', '2']:
                 input_path = input("Enter the input file path: ")
+                file_extension = os.path.splitext(input_path)[1].lower()
+                
                 if os.path.exists(input_path):
-                    if choice == '1' and input_path.endswith(('.txt', '.log', '.md')):
+                    if choice == '1' and file_extension in ['.txt', '.log', '.md']:
                         process_file(input_path)
-                    elif choice == '2' and input_path.lower().endswith(('.bmp', '.jpg', '.png', '.jpeg')):
+                    elif choice == '2' and file_extension in ['.bmp', '.jpg', '.png', '.jpeg']:
                         process_file(input_path)
                     else:
-                        print("Invalid file type for selected option!")
+                        print(f"Invalid file type: {file_extension}")
                 else:
                     print(f"File not found: {input_path}")
             else:
-                print("Invalid choice!")
+                print("Invalid choice!")'''
 
 if __name__ == "__main__":
     main()
