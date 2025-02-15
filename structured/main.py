@@ -19,7 +19,6 @@ def process_file(input_path):
         print(f"Error: File '{input_path}' not found!")
         return
 
-    # Determine if input is image
     base_filename = os.path.splitext(input_path)[0]
 
     try:
@@ -28,14 +27,14 @@ def process_file(input_path):
         compressor = Compressor(base_filename + "_compressed.bin")
 
         # Read input
+        print("Reading input file...")
         data = FileHandler.read_text(input_path)
        
         # Encode data
-
         print("Encoding data...")
         encoded_data = codec.encode(data)
 
-        # Compress data and include Huffman codes
+        # Compress data
         print("Compressing encoded data...")
         compressed_data = compressor.compress(encoded_data, codec.codes)
 
@@ -53,21 +52,9 @@ def process_file(input_path):
         print(f"Compressed size: {compressed_size} bytes")
         print(f"Compression ratio: {compression_ratio:.2f}%")
 
-        # Decompress and verify
-        print("\nTesting decompression...")
-        decompressed_data = compressor.decompress(compressed_data)
-        decoded_data = codec.decode(decompressed_data, original_shape)
-
-        # Save decoded data
-        output_file = base_filename + "_decoded.txt"
-        print(f"Saving decoded text to: {output_file}")
-        FileHandler.write_text(output_file, decoded_data)
-
-        print("\nProcess completed successfully!")
-
     except Exception as e:
         print(f"An error occurred: {str(e)}")
-        raise e  # This will help with debugging
+        raise e
 
 def decompress_file(compressed_file_path):
     if not os.path.exists(compressed_file_path):
@@ -76,6 +63,7 @@ def decompress_file(compressed_file_path):
 
     try:
         # Read the compressed binary file
+        print("Reading compressed file...")
         with open(compressed_file_path, 'rb') as f:
             compressed_data = f.read()
 
@@ -86,67 +74,52 @@ def decompress_file(compressed_file_path):
         base_filename = compressed_file_path.replace("_compressed.bin", "")
 
         # Decompress the data
-        print("\nDecompressing data...")
-        decompressed_data, recovered_codes = compressor.decompress(compressed_data)
+        print("Decompressing data...")
+        bit_string, recovered_codes = compressor.decompress(compressed_data)
 
         # Create a new HuffmanCodec instance and set its codes
         codec = HuffmanCodec()
-        codec.codes = recovered_codes
-        
-        # Rebuild the Huffman tree from the recovered codes
-        codec._build_tree({symbol: 1 for symbol in recovered_codes.keys()})
-
-        # Determine if it's an image based on original filename
-        is_image = base_filename.lower().endswith(('.bmp', '.jpg', '.png', '.jpeg'))
+        codec.set_codes(recovered_codes)
 
         # Decode the data
         print("Decoding data...")
-        if is_image:
-            # For images, we need the original shape
-            # You might need to store this in the compressed file
-            shape = None  # You'll need to modify this
-            decoded_data = codec.decode(decompressed_data, shape)
-            output_file = base_filename + "_decompressed.jpg"
-            ImageHandler.save_image(output_file, decoded_data)
-        else:
-            decoded_data = codec.decode(decompressed_data)
-            output_file = base_filename + "_decompressed.txt"
-            FileHandler.write_text(output_file, decoded_data)
+        decoded_data = codec.decode(bit_string)
+        
+        # Save decoded data
+        output_file = base_filename + "_decompressed.txt"
+        print(f"Saving decoded text to: {output_file}")
+        FileHandler.write_text(output_file, decoded_data)
 
-        print(f"\nDecompressed file saved as: {output_file}")
+        print("\nDecompression completed successfully!")
 
     except Exception as e:
         print(f"An error occurred during decompression: {str(e)}")
         raise e
 
-# Modify your main() function to include decompression option:
 def main():
     while True:
         print("\nHuffman Compression Tool")
-        print("1. Compress text file")
-        print("2. Compress image file")
-        print("3. Decompress file")
-        print("4. Exit")
+        print("1. Compress file")
+        print("2. Decompress file")
+        print("3. Exit")
         
-        choice = input("\nEnter your choice (1-4): ")
+        choice = input("\nEnter your choice (1-3): ")
         
-        if choice == '4':
+        if choice == '3':
             break
             
-        if choice in ['1', '2']:
+        if choice == '1':
             input_path = input("Enter the input file path: ")
             file_extension = os.path.splitext(input_path)[1].lower()
             
             if os.path.exists(input_path):
-                if choice == '1' and file_extension in ['.txt', '.log', '.md']:
-                    process_file(input_path)
-                elif choice == '2' and file_extension in ['.bmp', '.jpg', '.png', '.jpeg']:
+                if file_extension in ['.txt', '.log', '.md']:
                     process_file(input_path)
                 else:
                     print(f"Invalid file type: {file_extension}")
             else:
                 print(f"File not found: {input_path}")
-        elif choice == '3':
+        elif choice == '2':
             input_path = input("Enter the compressed file path (.bin): ")
             if os.path.exists(input_path) and input_path.endswith('.bin'):
                 decompress_file(input_path)
@@ -155,40 +128,7 @@ def main():
         else:
             print("Invalid choice!")
 
-'''
-def main():
-    if len(sys.argv) > 1:
-        # If file provided as command line argument
-        input_path = sys.argv[1]
-        process_file(input_path)
-    else:
-        # Interactive mode
-        while True:
-            print("\nHuffman Compression Tool")
-            print("1. Compress text file")
-            print("2. Compress image file")
-            print("3. Exit")
-            
-            choice = input("\nEnter your choice (1-3): ")
-            
-            if choice == '3':
-                break
-                
-            if choice in ['1', '2']:
-                input_path = input("Enter the input file path: ")
-                file_extension = os.path.splitext(input_path)[1].lower()
-                
-                if os.path.exists(input_path):
-                    if choice == '1' and file_extension in ['.txt', '.log', '.md']:
-                        process_file(input_path)
-                    elif choice == '2' and file_extension in ['.bmp', '.jpg', '.png', '.jpeg']:
-                        process_file(input_path)
-                    else:
-                        print(f"Invalid file type: {file_extension}")
-                else:
-                    print(f"File not found: {input_path}")
-            else:
-                print("Invalid choice!")'''
+
 
 if __name__ == "__main__":
     main()

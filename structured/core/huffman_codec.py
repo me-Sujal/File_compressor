@@ -6,9 +6,9 @@ from .priority_queue import PriorityQueue
 class HuffmanCodec:
     def __init__(self):
         self.codes = {}
+        self.reverse_codes = {}
         self.root = None
-        self.encoded_length = 0
-        
+
     def _build_tree(self, freq_dict):
         pq = PriorityQueue()
         for value, freq in freq_dict.items():
@@ -43,30 +43,33 @@ class HuffmanCodec:
         if node.right:
             self._generate_codes(node.right, code + "1")
 
-    def encode(self, data, is_image=False):
-        freq_dict = self._calculate_frequency(data, is_image)
+    def encode(self, data):
+        # Create frequency dictionary
+        freq_dict = Counter(data)
         self._build_tree(freq_dict)
         self._generate_codes()
         
-        if is_image:
-            data = data.flatten()
+        # Create reverse lookup for decoding
+        self.reverse_codes = {code: char for char, code in self.codes.items()}
         
-        encoded = ''.join(self.codes[value] for value in data)
-        self.encoded_length = len(encoded)
+        # Encode the data
+        encoded = ''.join(self.codes[char] for char in data)
         return encoded
 
-    def decode(self, encoded_data, original_shape=None):
+    def decode(self, encoded_data):
+        # Use reverse lookup instead of tree traversal
+        current_code = ''
         decoded = []
-        current = self.root
         
         for bit in encoded_data:
-            if bit == '0':
-                current = current.left
-            else:
-                current = current.right
+            current_code += bit
+            if current_code in self.reverse_codes:
+                decoded.append(self.reverse_codes[current_code])
+                current_code = ''
                 
-            if current.value is not None:
-                decoded.append(current.value)
-                current = self.root
+        return ''.join(decoded)
 
-        return ''.join(str(x) if not isinstance(x, str) else x for x in decoded)
+    def set_codes(self, codes):
+        self.codes = codes
+        # Create reverse lookup for decoding
+        self.reverse_codes = {code: char for char, code in codes.items()}
