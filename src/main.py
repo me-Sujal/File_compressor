@@ -57,6 +57,7 @@ def process_file(input_path):
         print(f"An error occurred: {str(e)}")
         raise e
 
+
 def decompress_file(compressed_file_path):
     if not os.path.exists(compressed_file_path):
         print(f"Error: File '{compressed_file_path}' not found!")

@@ -6,7 +6,8 @@ import sys
 import os
 import subprocess
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+from PyQt6.QtGui import QFontMetrics
+from PyQt6.QtCore import QTimer
 
 
 class MyWindow(QWidget):
@@ -14,6 +15,7 @@ class MyWindow(QWidget):
         super().__init__()
         self.init_ui()
         self.mode=None
+        self.compressed_data = None
 
     def init_ui(self):
         self.setWindowTitle("Advanced File Compression Tool")
@@ -95,9 +97,12 @@ class MyWindow(QWidget):
         select_file_button.clicked.connect(
             lambda: self.select_file_button_clicked(mode))
         
+        self.file_label = create_file_label()
+
         layout.addWidget(title)
         layout.addWidget(description)
         layout.addWidget(select_file_button)
+        layout.addWidget(self.file_label)  # Show selected file
         layout.addStretch()
         
         content.setLayout(layout)
@@ -133,16 +138,63 @@ class MyWindow(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-    def select_file_button_clicked(self,mode):
+    def select_file_button_clicked(self, mode):
+        if mode == "compress":
+            file_filter = "Text Files (*.txt)"
+        elif mode == "decompress":
+            file_filter = "Binary Files (*.bin)"
+        else:
+            file_filter = "All Files (*)"  # Fallback case    
+        
         file_name, _ = QFileDialog.getOpenFileName(
             self,
-            "Select a file to",
+            f"Select a file for {mode}",
             "",
-            "All Files (*)"
+            file_filter  # Apply dynamic filter
         )
+
         if not file_name:
             return
+        
+        self.selected_file = file_name  # Store selected file path
+
+        # Get file size in bytes
+        file_size_bytes = os.path.getsize(file_name)
+        
+        # Convert file size to a human-readable format (KB, MB)
+        if file_size_bytes < 1024:
+            file_size = f"{file_size_bytes} bytes"
+        elif file_size_bytes < 1048576:
+            file_size = f"{file_size_bytes / 1024:.2f} KB"
+        else:
+            file_size = f"{file_size_bytes / 1048576:.2f} MB"
+
+
+        # Handle long filenames with ellipsis
+        font_metrics = QFontMetrics(self.file_label.font())
+        elided_text = font_metrics.elidedText(file_name, Qt.TextElideMode.ElideMiddle, 300)
+
+        # Update label with file name and size
+        self.file_label.setText(f"Selected: {elided_text} ({file_size})")  # Update UI
 
         if mode in ["compress", "decompress"]:
-            command = [sys.executable, 'structured/main.py', mode, file_name]
-            subprocess.run(command)   
+            self.mode=mode
+            command = [sys.executable, 'src/main.py', mode, file_name]
+            subprocess.run(command)
+            # After compression, open the Save As dialog
+            QTimer.singleShot(2000, lambda: self.open_save_as_dialog())  # 3000 milliseconds = 3 seconds
+
+    def open_save_as_dialog(self):
+        if self.mode == "compress":
+            file_filter = "Binary Files (*.bin)"
+        elif self.mode == "decompress":
+            file_filter = "Text Files (*.txt)"
+        else:
+            return  # Exit if the mode is not recognized
+
+        save_file, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save File As",
+            "",
+            file_filter
+        )
