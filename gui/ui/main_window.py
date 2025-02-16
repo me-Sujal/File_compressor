@@ -1,12 +1,19 @@
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,QFileDialog, 
                             QFrame)
 from .widgets import *
 from .styles import WINDOW_STYLE
+import sys
+import os
+import subprocess
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 
 class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
+        self.mode=None
 
     def init_ui(self):
         self.setWindowTitle("Advanced File Compression Tool")
@@ -84,9 +91,13 @@ class MyWindow(QWidget):
         
         title = create_title_label(f"{mode.title()} Mode" if mode else "Select Mode")
         description = create_description_label(self.get_mode_description(mode))
+        select_file_button = create_selectfile_button("Select file", "#27ae60")
+        select_file_button.clicked.connect(
+            lambda: self.select_file_button_clicked(mode))
         
         layout.addWidget(title)
         layout.addWidget(description)
+        layout.addWidget(select_file_button)
         layout.addStretch()
         
         content.setLayout(layout)
@@ -100,6 +111,7 @@ class MyWindow(QWidget):
         return "Please select a mode from the sidebar."
 
     def switch_to_sidebar_layout(self, initial_mode):
+        self.mode=initial_mode
         self.clear_layout(self.main_layout)
         self.main_layout.addWidget(self.create_sidebar())
         self.main_layout.addWidget(self.create_main_content(initial_mode))
@@ -120,3 +132,17 @@ class MyWindow(QWidget):
             item = layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def select_file_button_clicked(self,mode):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select a file to",
+            "",
+            "All Files (*)"
+        )
+        if not file_name:
+            return
+
+        if mode in ["compress", "decompress"]:
+            command = [sys.executable, 'structured/main.py', mode, file_name]
+            subprocess.run(command)   

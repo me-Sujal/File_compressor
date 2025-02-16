@@ -69,6 +69,22 @@ def create_sidebar_button_style(color):
             background-color: {color}55;
         }}
     """
+def create_selectfile_button_style(color):
+    return f"""
+        QPushButton {{
+            background-color: transparent;
+            color: black;
+            border: 2px solid {color};
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+            margin: 5px 50px;
+        }}
+        QPushButton:hover {{
+            background-color: {color}55;
+        }}
+    """
 
 SIDEBAR_STYLE = """
     QFrame {

@@ -3,6 +3,7 @@ from core.huffman_codec import HuffmanCodec
 from utils.file_handler import FileHandler
 from compression import Compressor
 import os
+import sys
 
 def write_huffman_codes(codes, filename="huffman_codes.txt"):
     with open(filename, 'w') as f:
@@ -97,37 +98,15 @@ def decompress_file(compressed_file_path):
         raise e
 
 def main():
-    while True:
-        print("\nHuffman Compression Tool")
-        print("1. Compress file")
-        print("2. Decompress file")
-        print("3. Exit")
-        
-        choice = input("\nEnter your choice (1-3): ")
-        
-        if choice == '3':
-            break
-            
-        if choice == '1':
-            input_path = input("Enter the input file path: ")
-            file_extension = os.path.splitext(input_path)[1].lower()
-            
-            if os.path.exists(input_path):
-                if file_extension in ['.txt', '.log', '.md']:
-                    process_file(input_path)
-                else:
-                    print(f"Invalid file type: {file_extension}")
-            else:
-                print(f"File not found: {input_path}")
-        elif choice == '2':
-            input_path = input("Enter the compressed file path (.bin): ")
-            if os.path.exists(input_path) and input_path.endswith('.bin'):
-                decompress_file(input_path)
-            else:
-                print("Invalid file or file not found!")
-        else:
-            print("Invalid choice!")
+    mode = sys.argv[1]
+    file_path = sys.argv[2]
 
+    if mode == "compress":
+        process_file(file_path)
+    elif mode == "decompress":
+        decompress_file(file_path)
+    else:
+        print("Invalid mode. Please choose 'compress' or 'decompress'.")
 
 
 if __name__ == "__main__":

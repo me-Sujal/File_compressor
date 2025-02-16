@@ -38,6 +38,11 @@ def create_sidebar_button(text, color):
     button.setStyleSheet(create_sidebar_button_style(color))
     return button
 
+def create_selectfile_button(text, color):
+    button = QPushButton(text)
+    button.setStyleSheet(create_selectfile_button_style(color))
+    return button
+
 def create_title_label(text):
     label = QLabel(text)
     label.setStyleSheet(TITLE_STYLE)
