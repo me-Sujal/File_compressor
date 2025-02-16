@@ -144,5 +144,5 @@ class MyWindow(QWidget):
             return
 
         if mode in ["compress", "decompress"]:
-            command = [sys.executable, 'structured/main.py', mode, file_name]
+            command = [sys.executable, 'src/main.py', mode, file_name]
             subprocess.run(command)   
