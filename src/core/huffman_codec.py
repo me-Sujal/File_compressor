@@ -2,6 +2,7 @@
 from collections import Counter
 from .huffman_node import HuffmanNode
 from .priority_queue import PriorityQueue
+from .tree_viz import HuffmanTreeVisualizer
 
 class HuffmanCodec:
     def __init__(self):
@@ -73,3 +74,8 @@ class HuffmanCodec:
         self.codes = codes
         # Create reverse lookup for decoding
         self.reverse_codes = {code: char for char, code in codes.items()}
+
+    def visualize_tree(self):
+        visualizer = HuffmanTreeVisualizer()
+        visualizer.create_visualization(self.root)
+

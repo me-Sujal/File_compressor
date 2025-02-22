@@ -53,6 +53,11 @@ def process_file(input_path):
         print(f"Compressed size: {compressed_size} bytes")
         print(f"Compression ratio: {compression_ratio:.2f}%")
 
+        # In the process_file function, after encoding:
+        print("Generating Huffman tree visualization...")
+        codec.visualize_tree()  # This will display the tree
+ 
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         raise e
