@@ -106,8 +106,7 @@ class MyWindow(QWidget):
         #Visualize tree button
         self.visualize_tree_button = create_selectfile_button("Visualize tree", "#27ae60")
         self.visualize_tree_button.setVisible(False)
-        self.visualize_tree_button.clicked.connect(
-            lambda: self.visualize_tree_button_clicked(mode))
+        self.visualize_tree_button.clicked.connect(self.visualize_tree_button_clicked)
 
         layout.addWidget(title)
         layout.addWidget(description)
@@ -211,7 +210,7 @@ class MyWindow(QWidget):
         if save_file:
             self.save_path = save_file  # Store user-selected save path
     
-    def visualize_tree_button_clicked(self):
+    def visualize_tree_button_clicked(self, checked = "false"):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src/core/tree_viz.py'))
         if os.path.exists(script_path):
             subprocess.run(["python3", script_path])
