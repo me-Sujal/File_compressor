@@ -98,11 +98,23 @@ class MyWindow(QWidget):
             lambda: self.select_file_button_clicked(mode))
         
         self.file_label = create_file_label()
+        # Save button
+        self.save_button = create_selectfile_button("Save", "#f39c12")
+        self.save_button.setVisible(False)
+        self.save_button.clicked.connect(
+            lambda: self.save_file_button_clicked(mode))
+        #Visualize tree button
+        self.visualize_tree_button = create_selectfile_button("Visualize tree", "#27ae60")
+        self.visualize_tree_button.setVisible(False)
+        self.visualize_tree_button.clicked.connect(
+            lambda: self.visualize_tree_button_clicked(mode))
 
         layout.addWidget(title)
         layout.addWidget(description)
         layout.addWidget(select_file_button)
         layout.addWidget(self.file_label)  # Show selected file
+        layout.addWidget(self.save_button)  # Save button
+        layout.addWidget(self.visualize_tree_button) # visualize tree button
         layout.addStretch()
         
         content.setLayout(layout)
@@ -182,9 +194,11 @@ class MyWindow(QWidget):
             command = [sys.executable, 'src/main.py', mode, file_name]
             subprocess.run(command)
             # After compression, open the Save As dialog
-            QTimer.singleShot(2000, lambda: self.open_save_as_dialog())  # 3000 milliseconds = 3 seconds
-
-    def open_save_as_dialog(self):
+            self.save_button.setVisible(True)
+            if self.mode == "compress":
+                self.visualize_tree_button.setVisible(True)
+                
+    def save_file_button_clicked(self):
         if self.mode == "compress":
             file_filter = "Binary Files (*.bin)"
         elif self.mode == "decompress":
@@ -192,9 +206,14 @@ class MyWindow(QWidget):
         else:
             return  # Exit if the mode is not recognized
 
-        save_file, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save File As",
-            "",
-            file_filter
-        )
+        save_file, _ = QFileDialog.getSaveFileName(self, "Save File As", "", file_filter)
+
+        if save_file:
+            self.save_path = save_file  # Store user-selected save path
+    
+    def visualize_tree_button_clicked(self):
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src/core/tree_viz.py'))
+        if os.path.exists(script_path):
+            subprocess.run(["python3", script_path])
+        else:
+            return
