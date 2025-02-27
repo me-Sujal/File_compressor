@@ -55,7 +55,7 @@ def process_file(input_path):
 
         # In the process_file function, after encoding:
         print("Generating Huffman tree visualization...")
-        codec.visualize_tree()  # This will display the tree
+        # codec.visualize_tree()  # This will display the tree
  
 
     except Exception as e:

@@ -213,6 +213,6 @@ class MyWindow(QWidget):
     def visualize_tree_button_clicked(self, checked = "false"):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src/core/tree_viz.py'))
         if os.path.exists(script_path):
-            subprocess.run(["python3", script_path])
+            subprocess.run([sys.executable, script_path], check=True)
         else:
             return
