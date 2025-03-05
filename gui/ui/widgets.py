@@ -70,3 +70,24 @@ def create_file_label():
     label.setWordWrap(False)  # Prevent wrapping
     label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # Allow text selection
     return label
+
+def create_action_button(text, color):
+    button = QPushButton(text)
+    button.setStyleSheet(f"""
+        QPushButton {{
+            background-color: {color};
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 150px;
+        }}
+        QPushButton:hover {{
+            background-color: {color}dd;
+        }}
+        QPushButton:pressed {{
+            background-color: {color}aa;
+        }}
+    """)
+    return button

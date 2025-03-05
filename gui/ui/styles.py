@@ -1,7 +1,7 @@
 # Base styles
 WINDOW_STYLE = """
     QWidget {
-        background-color: #f5f6fa;
+        background-color: #bbbdbb;
         
     }
 """
