@@ -5,10 +5,9 @@ from .styles import WINDOW_STYLE
 import sys
 import os
 import subprocess
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtCore import QTimer, Qt
-
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -263,7 +262,7 @@ class MyWindow(QWidget):
         if mode in ["compress", "decompress"]:
             self.mode = mode
             command = [sys.executable, 'src/main.py', mode, file_name]
-            subprocess.run(command)
+            subprocess.run(command)     
             
             # After compression/decompression, update compressed file info
             if mode == "compress":
@@ -299,30 +298,46 @@ class MyWindow(QWidget):
             return f"{size_bytes / 1048576:.2f} MB"
         
     def save_file_button_clicked(self):
-        if self.mode == "compress":
-            file_filter = "Binary Files (*.bin)"
-            default_name = os.path.splitext(os.path.basename(self.selected_file))[0] + ".bin"
-        elif self.mode == "decompress":
-            file_filter = "Text Files (*.txt)"
-            default_name = os.path.splitext(os.path.basename(self.selected_file))[0] + ".txt"
-        else:
-            return  # Exit if the mode is not recognized
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+        if project_root not in sys.path:
+            sys.path.append(project_root)
+        
+        print(sys.path)
 
-        save_file, _ = QFileDialog.getSaveFileName(
-            self, 
-            "Save File As", 
-            default_name,
-            file_filter
-        )
-
-        if save_file:
-            self.save_path = save_file  # Store user-selected save path
-            # Here you would implement the actual file saving logic
-            print(f"Saving to: {save_file}")
+        try:
+            from src.main import Save
+            save = Save()
+            save.save_file()
+        except Exception as e:
+            print(f"error!{e}")
     
     def visualize_tree_button_clicked(self):
-        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src/core/tree_viz.py'))
-        if os.path.exists(script_path):
-            subprocess.run([sys.executable, script_path], check=True)
-        else:
-            print(f"Tree visualization script not found at: {script_path}")
+        if self.mode == "compress" and self.selected_file:            
+            # Get the project root directory
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+            
+            # Add to path if not already there
+            if project_root not in sys.path:
+                sys.path.append(project_root)
+            
+            print(project_root)
+                
+            try:
+                # Now import the necessary modules with proper paths
+                from src.core.huffman_codec import HuffmanCodec
+                from src.utils.file_handler import FileHandler
+                
+                # Initialize codec
+                codec = HuffmanCodec()
+                
+                # Read and encode the data to generate the tree
+                data = FileHandler.read_text(self.selected_file)
+                codec.encode(data)
+                
+                # Visualize the tree
+                codec.visualize_tree()
+            except ImportError as e:
+                print(f"Import error: {str(e)}")
+                print(f"Current path: {sys.path}")
+            except Exception as e:
+                print(f"Error visualizing tree: {str(e)}")
