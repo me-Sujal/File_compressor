@@ -9,6 +9,7 @@ class HuffmanCodec:
         self.codes = {}
         self.reverse_codes = {}
         self.root = None
+    # end of __init__
 
     def _build_tree(self, freq_dict):
         pq = PriorityQueue()
@@ -29,6 +30,7 @@ class HuffmanCodec:
             combined.right = node2
 
             pq.push((combined, combined.freq))
+    # enf of build_tree
 
     def _generate_codes(self, node=None, code=""):
         if node is None:
@@ -43,6 +45,7 @@ class HuffmanCodec:
             self._generate_codes(node.left, code + "0")
         if node.right:
             self._generate_codes(node.right, code + "1")
+    # end of generate_codes
 
     def encode(self, data):
         # Create frequency dictionary
@@ -56,6 +59,7 @@ class HuffmanCodec:
         # Encode the data
         encoded = ''.join(self.codes[char] for char in data)
         return encoded
+    # end of encode
 
     def decode(self, encoded_data):
         # Use reverse lookup instead of tree traversal
@@ -69,13 +73,15 @@ class HuffmanCodec:
                 current_code = ''
                 
         return ''.join(decoded)
+    # end of decode
 
     def set_codes(self, codes):
         self.codes = codes
         # Create reverse lookup for decoding
         self.reverse_codes = {code: char for char, code in codes.items()}
+    # end of set_codes
 
     def visualize_tree(self):
         visualizer = HuffmanTreeVisualizer()
         visualizer.create_visualization(self.root)
-
+    # end of visualize_tree

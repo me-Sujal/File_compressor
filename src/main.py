@@ -1,21 +1,8 @@
-
 from core.huffman_codec import HuffmanCodec
 from utils.file_handler import FileHandler
 from compression import Compressor
 import os
 import sys
-
-compressed_data = None
-compressor = None
-
-class Save:
-    @staticmethod
-    def save_file():
-        global compressed_data, compressor
-        if compressed_data and compressor:
-            FileHandler.write_binary(compressor.filename, compressed_data)
-            return True
-        return False
 
 def write_huffman_codes(codes, filename="huffman_codes.txt"):
     with open(filename, 'w') as f:
@@ -38,15 +25,12 @@ def process_file(input_path):
         codec = HuffmanCodec()
         compressor = Compressor(base_filename + "_compressed.bin")
         
-        # Read input
         print("Reading input file...")
         data = FileHandler.read_text(input_path)
         
-        # Encode data
         print("Encoding data...")
         encoded_data = codec.encode(data)
         
-        # Compress data
         print("Compressing encoded data...")
         compressed_data = compressor.compress(encoded_data, codec.codes)
         print(type(compressed_data))

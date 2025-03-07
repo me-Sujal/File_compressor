@@ -5,7 +5,6 @@ from .styles import WINDOW_STYLE
 import sys
 import os
 import subprocess
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtCore import QTimer, Qt
 
@@ -17,6 +16,7 @@ class MyWindow(QWidget):
         self.compressed_data = None
         self.selected_file = None
         self.output_file_path = None
+    # end of __init__
 
     def init_ui(self):
         self.setWindowTitle("Advanced File Compression Tool")
@@ -27,6 +27,7 @@ class MyWindow(QWidget):
         self.setup_initial_view()
         self.setLayout(self.main_layout)
         self.setFixedSize(800, 600)
+    # end of init_ui
 
     def setup_initial_view(self):
         self.center_layout = QVBoxLayout()
@@ -61,6 +62,7 @@ class MyWindow(QWidget):
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.center_layout)
         self.main_layout.addWidget(self.central_widget)
+    # end of setup_initial
 
     def create_sidebar(self):
         sidebar = QFrame()
@@ -87,6 +89,7 @@ class MyWindow(QWidget):
         
         sidebar.setLayout(sidebar_layout)
         return sidebar
+    # end of create_sidebar
 
     def create_main_content(self, mode):
         content = QWidget()
@@ -187,6 +190,7 @@ class MyWindow(QWidget):
         
         content.setLayout(layout)
         return content
+    # end of create_main_content
 
     def get_mode_description(self, mode):
         if mode == "compress":
@@ -194,12 +198,14 @@ class MyWindow(QWidget):
         elif mode == "decompress":
             return "Select a compressed file to extract its contents."
         return "Please select a mode from the sidebar."
+    # end of get mode_despription
 
     def switch_to_sidebar_layout(self, initial_mode):
         self.mode = initial_mode
         self.clear_layout(self.main_layout)
         self.main_layout.addWidget(self.create_sidebar())
         self.main_layout.addWidget(self.create_main_content(initial_mode))
+    # end of switch_to_sidebar_layout
 
     def update_main_content(self, mode):
         if self.main_layout.count() > 1:
@@ -207,16 +213,19 @@ class MyWindow(QWidget):
             if old_content.widget():
                 old_content.widget().deleteLater()
         self.main_layout.addWidget(self.create_main_content(mode))
+    # end og update_main_content
 
     def return_to_initial_view(self):
         self.clear_layout(self.main_layout)
         self.setup_initial_view()
+    # end of return_to_initial_view
 
     def clear_layout(self, layout):
         while layout.count():
             item = layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+    # end of clear_layput
 
     def select_file_button_clicked(self, mode):
         if mode == "compress":
@@ -293,6 +302,7 @@ class MyWindow(QWidget):
             else:
                 # Handle error with a styled message box
                 self.show_error_message_box(mode)
+    # end of select_file_button_clicked
 
     def show_styled_message_box(self, mode):
         """Show a styled message box with file path information"""
@@ -313,6 +323,7 @@ class MyWindow(QWidget):
             f"font-family: monospace; word-wrap: break-word;'>{self.output_file_path}</p>"
         )
         msg_box.exec()
+    # end of show_styled_message_box
 
     def  show_error_message_box(self, mode):
         """Show a styled error message box"""
@@ -327,6 +338,7 @@ class MyWindow(QWidget):
     
     
         msg_box.exec()
+    # end of show_errior_message_box
 
     def format_file_size(self, size_bytes):
         """Convert file size to human-readable format"""
@@ -336,8 +348,8 @@ class MyWindow(QWidget):
             return f"{size_bytes / 1024:.2f} KB"
         else:
             return f"{size_bytes / 1048576:.2f} MB"
-        
-    
+    # end of format_file_size
+
     def visualize_tree_button_clicked(self):
         if self.mode == "compress" and self.selected_file:            
             # Get the project root directory
@@ -368,3 +380,5 @@ class MyWindow(QWidget):
                 print(f"Current path: {sys.path}")
             except Exception as e:
                 print(f"Error visualizing tree: {str(e)}")
+    # end of visualize_tree_button_clicked
+    

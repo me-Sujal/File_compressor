@@ -1,4 +1,3 @@
-# utils/file_handler.py
 class FileHandler:
     @staticmethod
     def read_text(filepath):
