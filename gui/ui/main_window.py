@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFileDialog, 
-                            QFrame, QLabel)
+                            QFrame, QLabel, QMessageBox)
 from .widgets import *
 from .styles import WINDOW_STYLE
 import sys
@@ -16,6 +16,7 @@ class MyWindow(QWidget):
         self.mode = None
         self.compressed_data = None
         self.selected_file = None
+        self.output_file_path = None
 
     def init_ui(self):
         self.setWindowTitle("Advanced File Compression Tool")
@@ -169,17 +170,12 @@ class MyWindow(QWidget):
         bottom_layout = QHBoxLayout(bottom_buttons)
         bottom_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         
-        # Create smaller action buttons
-        self.save_button = create_action_button("Save", "#f39c12")
-        self.save_button.setVisible(False)
-        self.save_button.clicked.connect(self.save_file_button_clicked)
-        
         self.visualize_tree_button = create_action_button("Visualize tree", "#27ae60")
         self.visualize_tree_button.setVisible(False)
         self.visualize_tree_button.clicked.connect(self.visualize_tree_button_clicked)
         
         bottom_layout.addWidget(self.visualize_tree_button)
-        bottom_layout.addWidget(self.save_button)
+        # bottom_layout.addWidget(self.save_button)
         
         # Add all elements to main layout
         layout.addWidget(title)
@@ -229,7 +225,7 @@ class MyWindow(QWidget):
             file_filter = "Binary Files (*.bin)"
         else:
             file_filter = "All Files (*)"  # Fallback case    
-        
+
         file_name, _ = QFileDialog.getOpenFileName(
             self,
             f"Select a file for {mode}",
@@ -239,54 +235,98 @@ class MyWindow(QWidget):
 
         if not file_name:
             return
-        
+
         self.selected_file = file_name  # Store selected file path
 
         # Get file size in bytes
         file_size_bytes = os.path.getsize(file_name)
-        
+
         # Convert file size to a human-readable format
         file_size = self.format_file_size(file_size_bytes)
-        
+
         # Update original file info
         file_basename = os.path.basename(file_name)
         self.original_file_name.setText(file_basename)
         self.original_file_size.setText(file_size)
-        
+
         # Change button text to "Compress another" or "Decompress another"
         self.select_file_button.setText(f"{mode.title()} another")
-        
+
         # Make file info visible
         self.file_info_widget.setVisible(True)
 
         if mode in ["compress", "decompress"]:
             self.mode = mode
             command = [sys.executable, 'src/main.py', mode, file_name]
-            subprocess.run(command)     
-            
-            # After compression/decompression, update compressed file info
-            if mode == "compress":
-                # Update compressed file information (assuming output is filename.bin)
-                compressed_filename = os.path.splitext(file_basename)[0] + ".bin"
-                self.compressed_file_name.setText(compressed_filename)
-                
-                # Estimate compressed file size (this is a placeholder - replace with actual calculation)
-                # In a real implementation, you would get the actual size of the compressed file
-                compressed_size_bytes = file_size_bytes // 2  # Just an example compression ratio
-                self.compressed_file_size.setText(self.format_file_size(compressed_size_bytes))
-                
-                self.visualize_tree_button.setVisible(True)
-            elif mode == "decompress":
-                # Update decompressed file information
-                decompressed_filename = os.path.splitext(file_basename)[0] + ".txt"
-                self.compressed_file_name.setText(decompressed_filename)
-                
-                # Placeholder for decompressed size
-                decompressed_size_bytes = file_size_bytes * 2  # Example ratio
-                self.compressed_file_size.setText(self.format_file_size(decompressed_size_bytes))
-            
-            # Show save button
-            self.save_button.setVisible(True)
+            result = subprocess.run(command)
+
+            if result.returncode == 0:  # If the process completed successfully
+                # Determine the output file path based on the mode
+                if mode == "compress":
+                    output_file_path = os.path.splitext(file_name)[0] + "_compressed.bin"
+                    compressed_filename = os.path.basename(output_file_path)
+                    self.compressed_file_name.setText(compressed_filename)
+
+                    if os.path.exists(output_file_path):
+                        compressed_size_bytes = os.path.getsize(output_file_path)
+                        self.compressed_file_size.setText(self.format_file_size(compressed_size_bytes))
+
+                        # Store the path for use in the message box
+                        self.output_file_path = output_file_path
+
+                    self.visualize_tree_button.setVisible(True)
+
+                elif mode == "decompress":
+                    output_file_path = os.path.splitext(file_name)[0] + "_decompressed.txt"
+                    decompressed_filename = os.path.basename(output_file_path)
+                    self.compressed_file_name.setText(decompressed_filename)
+
+                    if os.path.exists(output_file_path):
+                        decompressed_size_bytes = os.path.getsize(output_file_path)
+                        self.compressed_file_size.setText(self.format_file_size(decompressed_size_bytes))
+
+                        # Store the path for use in the message box
+                        self.output_file_path = output_file_path
+
+                # Create a styled message box
+                self.show_styled_message_box(mode)
+            else:
+                # Handle error with a styled message box
+                self.show_error_message_box(mode)
+
+    def show_styled_message_box(self, mode):
+        """Show a styled message box with file path information"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(f"{mode.title()} Completed")
+
+        # Set icon
+        msg_box.setIcon(QMessageBox.Icon.Information)
+
+        # Set main text
+        msg_box.setText(f"<h3 style= 'color: #030303'>{mode.title()} operation completed successfully!</h3>")
+
+        # Set detailed text with file path
+        file_type = "compressed" if mode == "compress" else "decompressed"
+        msg_box.setInformativeText(
+            f"<p style='font-size: 14px, color : #030303;'>The {file_type} file has been saved to:</p>"
+            f"<p style='font-size: 12px, color: #030303; padding: 8px; border-radius: 4px; "
+            f"font-family: monospace; word-wrap: break-word;'>{self.output_file_path}</p>"
+        )
+        msg_box.exec()
+
+    def  show_error_message_box(self, mode):
+        """Show a styled error message box"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Operation Failed")
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+        msg_box.setText(f"<h3>Error during {mode} operation</h3>")
+        msg_box.setInformativeText(
+            "<p style='color: #e74c3c;'>The operation could not be completed. "
+            "Please check that the file is valid and try again.</p>"
+        )
+    
+    
+        msg_box.exec()
 
     def format_file_size(self, size_bytes):
         """Convert file size to human-readable format"""
@@ -297,19 +337,6 @@ class MyWindow(QWidget):
         else:
             return f"{size_bytes / 1048576:.2f} MB"
         
-    def save_file_button_clicked(self):
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-        if project_root not in sys.path:
-            sys.path.append(project_root)
-        
-        print(sys.path)
-
-        try:
-            from src.main import Save
-            save = Save()
-            save.save_file()
-        except Exception as e:
-            print(f"error!{e}")
     
     def visualize_tree_button_clicked(self):
         if self.mode == "compress" and self.selected_file:            

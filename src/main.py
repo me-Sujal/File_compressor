@@ -5,12 +5,17 @@ from compression import Compressor
 import os
 import sys
 
-compressed_data = bytearray()
+compressed_data = None
+compressor = None
 
 class Save:
-    
+    @staticmethod
     def save_file():
-        FileHandler.write_binary(compressor.filename, compressed_data)
+        global compressed_data, compressor
+        if compressed_data and compressor:
+            FileHandler.write_binary(compressor.filename, compressed_data)
+            return True
+        return False
 
 def write_huffman_codes(codes, filename="huffman_codes.txt"):
     with open(filename, 'w') as f:
@@ -48,7 +53,8 @@ def process_file(input_path):
         
         # Save compressed data
         print(f"Saving compressed data to: {compressor.filename}")
-        # FileHandler.write_binary(compressor.filename, compressed_data)
+        FileHandler.write_binary(compressor.filename, compressed_data)
+        
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         raise e
