@@ -19,7 +19,7 @@ class MyWindow(QWidget):
     # end of __init__
 
     def init_ui(self):
-        self.setWindowTitle("Advanced File Compression Tool")
+        self.setWindowTitle("Basic File Compression Tool")
         self.setStyleSheet(WINDOW_STYLE)
         
         # Main horizontal layout
@@ -285,20 +285,33 @@ class MyWindow(QWidget):
 
                     self.visualize_tree_button.setVisible(True)
 
+                
                 elif mode == "decompress":
-                    output_file_path = os.path.splitext(file_name)[0] + "_decompressed.txt"
-                    decompressed_filename = os.path.basename(output_file_path)
+                    # Define expected output path
+                    self.output_file_path = os.path.splitext(file_name)[0] + "_decompressed.txt"
+                    decompressed_filename = os.path.basename(self.output_file_path)
                     self.compressed_file_name.setText(decompressed_filename)
+                    
+                    # Run the decompression command
+                    command = [sys.executable, 'src/main.py', mode, file_name]
+                    subprocess.run(command)
+                    
+                    # Define a function to poll for file existence and update UI
+                    def check_file_exists():
+                        if os.path.exists(self.output_file_path):
+                            # File exists, update size
+                            decompressed_size_bytes = os.path.getsize(self.output_file_path)
+                            self.compressed_file_size.setText(self.format_file_size(decompressed_size_bytes))
+                            return
+                        # File doesn't exist yet, try again after a delay
+                        QTimer.singleShot(500, check_file_exists)
+                    
+                    # Start checking for file
+                    QTimer.singleShot(400, check_file_exists)
+                    
+                    # Show message box regardless of file size
+                    self.show_styled_message_box(mode)
 
-                    if os.path.exists(output_file_path):
-                        decompressed_size_bytes = os.path.getsize(output_file_path)
-                        self.compressed_file_size.setText(self.format_file_size(decompressed_size_bytes))
-
-                        # Store the path for use in the message box
-                        self.output_file_path = output_file_path
-
-                # Create a styled message box
-                self.show_styled_message_box(mode)
             else:
                 # Handle error with a styled message box
                 self.show_error_message_box(mode)
@@ -313,13 +326,13 @@ class MyWindow(QWidget):
         msg_box.setIcon(QMessageBox.Icon.Information)
 
         # Set main text
-        msg_box.setText(f"<h3 style= 'color: #030303'>{mode.title()} operation completed successfully!</h3>")
+        msg_box.setText(f"<h3 style= 'color: #032030'>{mode.title()} operation completed successfully!</h3>")
 
         # Set detailed text with file path
         file_type = "compressed" if mode == "compress" else "decompressed"
         msg_box.setInformativeText(
-            f"<p style='font-size: 14px, color : #030303;'>The {file_type} file has been saved to:</p>"
-            f"<p style='font-size: 12px, color: #030303; padding: 8px; border-radius: 4px; "
+            f"<p style='font-size: 14px; color: #030302;'>The {file_type} file has been saved to:</p>"
+            f"<p style='font-size: 12px; color: #030302; padding: 8px; border-radius: 4px; "
             f"font-family: monospace; word-wrap: break-word;'>{self.output_file_path}</p>"
         )
         msg_box.exec()
@@ -339,6 +352,15 @@ class MyWindow(QWidget):
     
         msg_box.exec()
     # end of show_errior_message_box
+
+    # def update_decompressed_file_size(self, file_path):
+    #     """Update the file size label after a short delay"""
+    #     if os.path.exists(file_path):
+    #         decompressed_size_bytes = os.path.getsize(file_path)
+    #         self.compressed_file_size.setText(self.format_file_size(decompressed_size_bytes))
+    #     else:
+    #         # If file still doesn't exist, try again after another delay
+    #         QTimer.singleShot(500, lambda: self.update_decompressed_file_size(file_path))
 
     def format_file_size(self, size_bytes):
         """Convert file size to human-readable format"""

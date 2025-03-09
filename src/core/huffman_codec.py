@@ -48,8 +48,19 @@ class HuffmanCodec:
     # end of generate_codes
 
     def encode(self, data):
+        data = data.strip()  # Remove leading/trailing whitespace
+        data = ''.join(data.split())  # Remove all whitespace
         # Create frequency dictionary
         freq_dict = Counter(data)
+
+        print("Frequency dictionary:")
+        for char, freq in freq_dict.items():
+            if char.isspace():
+                print(f"Space (ASCII {ord(char)}): {freq}")
+            else:
+                print(f"{char}: {freq}")
+    
+
         self._build_tree(freq_dict)
         self._generate_codes()
         
