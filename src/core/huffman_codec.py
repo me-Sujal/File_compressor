@@ -48,8 +48,8 @@ class HuffmanCodec:
     # end of generate_codes
 
     def encode(self, data):
-        # data = data.strip()  # Remove leading/trailing whitespace
-        # data = ''.join(data.split())  # Remove all whitespace
+
+        # removing the trailing whitespaces
         data = data.rstrip()
         # Create frequency dictionary
         freq_dict = Counter(data)
